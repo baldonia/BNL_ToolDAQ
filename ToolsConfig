@@ -1,0 +1,16 @@
+# Open the digitizers
+OpenDigitizer1 OpenDigitizer configfiles/config_b1
+OpenDigitizer2 OpenDigitizer configfiles/config_b2
+OpenDigitizer3 OpenDigitizer configfiles/config_b3
+# Configure the digitizers
+ConfigureBoard1 ConfigureBoard configfiles/config_b1
+ConfigureBoard2 ConfigureBoard configfiles/config_b2
+ConfigureBoard3 ConfigureBoard configfiles/config_b3
+# Readout the digitizers
+ReadoutBoard1 ReadoutBoard configfiles/config_b1
+#ReadoutBoard2 ReadoutBoard configfiles/config_b2
+#ReadoutBoard3 ReadoutBoard configfiles/config_b3
+# Close the digitizers
+CloseDigitizer1 CloseDigitizer configfiles/config_b1
+CloseDigitizer2 CloseDigitizer configfiles/config_b2
+CloseDigitizer3 CloseDigitizer configfiles/config_b3

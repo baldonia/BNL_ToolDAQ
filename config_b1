@@ -1,0 +1,12 @@
+# Config file for Board 1
+
+address 0x32100000 #VME base address
+bID 1 # Board ID
+DynRange 0.5 # Dynamic range
+RecLen 2000 # Acquisition window length in samples
+PostTrig 50 # Post trigger percent
+thresh 11000 # Trigger threshold
+polarity positive # Trigger Polarity
+DCOff 32767 # DC offset
+ChanEnableMask 0xFFFF # Channel enable mask
+verbose 1 # Print out confirmation messages
