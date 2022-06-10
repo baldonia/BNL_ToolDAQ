@@ -1,0 +1,6 @@
+#test1 DummyTool configfiles/Dummy/DummyToolConfig
+#test2 DummyTool configfiles/Dummy/DummyToolConfig
+#OpenDigitizer OpenDigitizer Null
+ConfigureBoard1 ConfigureBoard configfiles/config_b1
+ConfigureBoard2 ConfigureBoard configfiles/config_b2
+ConfigureBoard3 ConfigureBoard configfiles/config_b3

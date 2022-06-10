@@ -30,6 +30,9 @@ class ReadBoard: public Tool {
 
   static long get_time();
 
+  int OpenBoard(Store m_variables);
+  bool ConfigureBoard(int handle, Store m_variables);
+
   uint32_t bID;
   uint64_t PrevRateTime;
   int handle, verbose, acq_started=0, Nb, Ne;
