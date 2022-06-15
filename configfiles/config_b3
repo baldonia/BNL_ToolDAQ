@@ -1,10 +1,10 @@
 # Config file for Board 1
 
 # Print out confirmation messages
-verbose 1 
+verbose 1
 
 # Print out data acquisition rate
-show_data_rate 1
+show_data_rate 1 
 
 # Connection settings
 VME_bridge 1 # Use VME bridge
@@ -17,11 +17,17 @@ bID 3 # Board ID
 use_global 0 # Use global settings
 DynRange 0.5 # Dynamic range
 RecLen 2000 # Acquisition window length in samples
+DCOff 32767 # DC offset
+ChanEnableMask 0x1 # Active channels
+
+# Trigger settings
 PostTrig 50 # Post trigger percent
 thresh 11000 # Trigger threshold
 polarity positive # Trigger Polarity
-DCOff 32767 # DC offset
-ChanEnableMask 0x1 # Channel enable mask
+ChanSelfTrigMask 0x1 # Active channel self-triggers
+ChanSelfTrigMode ACQ_AND_EXTOUT # Channel self trigger propagation
+TrigInMode ACQ_AND_EXTOUT # Trigger In propagation
+SWTrigMode ACQ_AND_EXTOUT # Software trigger propagation
 
 # Path to individual channel settings file
 chan_set_file configfiles/b3_chan_set.txt
