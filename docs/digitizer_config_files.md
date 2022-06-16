@@ -1,5 +1,5 @@
 # Digitizer config files
-The parameters in this file are for global board settings. Individual channel settings can be set in the individual channel settings configuration file.
+The parameters in this file are for global board settings. Individual channel settings can be set in the [individual channel settings configuration file](channel_settings_config_files.md).
 
 | Parameter Name   | Type      | Description                                                                                      | 
 |:-----------------|-----------|--------------------------------------------------------------------------------------------------|
