@@ -9,7 +9,6 @@
  `source Setup.sh` in the ToolApplication directory.
  
  ### To add a digitizer
- Create a digitizer configuration file in the configfiles directory using `config_b1` as a template and change the settings to your desired configuration (see config 
- files readme). Create an individual channel settings configuration file in the configfiles directory using `b1_chan_settings.txt` as a template and change the 
- settings to your desired configuration (see config files readme). Add a line to the ToolsConfig file containing `<unique name of Tool instance> <ReadBoard> 
+ Create a digitizer configuration file in the configfiles directory using `config_b1` as a template and change the settings to your desired configuration (see [here](docs/digitizer_config_files.md)). Create an individual channel settings configuration file in the configfiles directory using `b1_chan_settings.txt` as a template and change the 
+ settings to your desired configuration (see [here](docs/channel_settings_config_files.md)). Add a line to the ToolsConfig file containing `<unique name of Tool instance> <ReadBoard> 
  <path to digitizer config file>`. 
