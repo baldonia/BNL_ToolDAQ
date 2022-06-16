@@ -5,7 +5,7 @@
  binary data files.
  
  ### Before running
- Navigate to the configfiles directory and adjust the [digitizer configuration files](docs/digitizer_config_files.md) and [individual channel setting files](docs/channel_settings_config_files.md) for the digitizers you want to run. If this is the first time running ToolDAQ in a session, navigate to the ToolApplication directory and source the shell script `source Setup.sh`.
+ Navigate to the configfiles directory and adjust the [digitizer configuration files](docs/digitizer_config_files.md) (`config_b1` for example) and [individual channel setting files](docs/channel_settings_config_files.md) (`b1_chan_set.txt` for example) for the digitizers you want to run. If this is the first time running ToolDAQ in a session, navigate to the ToolApplication directory and source the shell script `source Setup.sh`.
  
  ### To run
  Navigate to the ToolApplication directory then run `./main <your Tool Chain config file>`.
