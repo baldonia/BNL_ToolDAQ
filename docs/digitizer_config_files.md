@@ -23,4 +23,4 @@ The parameters in this file are for global board settings. Individual channel se
 | TrigInMode       | string    | External trigger input propagation. Must be "DISABLED"/"ACQ_ONLY"/"EXTOUT_ONLY"/"ACQ_AND_EXTOUT" |
 | SWTrigMode       | string    | SW trigger propagation. Must be "DISABLED"/"ACQ_ONLY"/"EXTOUT_ONLY"/"ACQ_AND_EXTOUT" (currently not implemented, keep at DISABLED)|
 | chan_set_file    | string    | Path to individual channel settings file                                                         |
-| ofile            | string    | string | Output file name or path                                                                |
+| ofile            | string    | Output file name or path (must be the same for all digitizer config files, working on updating) |
