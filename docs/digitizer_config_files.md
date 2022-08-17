@@ -21,6 +21,6 @@ The parameters in this file are for global board settings. Individual channel se
 | ChanSelfTrigMask | uint32_t  | 16-bit mask of channels to activate self trigger (hex)                                           |
 | ChanSelfTrigMode | string    | Channel self trigger propagation. Must be "DISABLED"/"ACQ_ONLY"/"EXTOUT_ONLY"/"ACQ_AND_EXTOUT"   |
 | TrigInMode       | string    | External trigger input propagation. Must be "DISABLED"/"ACQ_ONLY"/"EXTOUT_ONLY"/"ACQ_AND_EXTOUT" |
-| SWTrigMode       | string    | SW trigger propagation. Must be "DISABLED"/"ACQ_ONLY"/"EXTOUT_ONLY"/"ACQ_AND_EXTOUT"             |
+| SWTrigMode       | string    | SW trigger propagation. Must be "DISABLED"/"ACQ_ONLY"/"EXTOUT_ONLY"/"ACQ_AND_EXTOUT" (currently not implemented, keep at DISABLED)|
 | chan_set_file    | string    | Path to individual channel settings file                                                         |
 | ofile            | string    | string | Output file name or path                                                                |
