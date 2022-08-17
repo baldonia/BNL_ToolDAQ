@@ -1,8 +1,11 @@
 # BNL_ToolDAQ
 
- An application using the [ToolDAQ Framework](https://docs.google.com/document/d/18rgYMOAGt3XiW9i0qN9kfUK1ssbQgLV1gQgG3hyVUoA/edit).
+ A supplement based on the [ToolDAQ Framework](https://docs.google.com/document/d/18rgYMOAGt3XiW9i0qN9kfUK1ssbQgLV1gQgG3hyVUoA/edit).
  BNL_ToolDAQ is developed for the 1-ton and 30-ton WbLS experiments at Brookhaven National Lab. BNL_ToolDAQ configures and reads CAEN V1730S digitizers to output
  binary data files.
+ 
+ ### Prerequisite
+ You must have installed ToolDAQ to use the tools in BNL_ToolDAQ. Installation instructions can be found using the above link.
  
  ### Before running
  Navigate to the configfiles directory and adjust the [digitizer configuration files](docs/digitizer_config_files.md) (`config_b1` for example) and [individual channel setting files](docs/channel_settings_config_files.md) (`b1_chan_set.txt` for example) for the digitizers you want to run. If this is the first time running ToolDAQ in a session, navigate to the ToolApplication directory and source the shell script `source Setup.sh`.
