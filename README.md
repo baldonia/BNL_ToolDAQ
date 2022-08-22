@@ -5,7 +5,7 @@
  binary data files.
  
  ### Prerequisite
- You must have installed ToolDAQ to use the tools in BNL_ToolDAQ. Installation instructions can be found using the above link. You must also copy the folders of the tools you would like to use (ReadBoard, OpenDigitizer, etc) into ToolApplication/UserTools/InactiveTools. Then run the ToolSelect.sh script to activate those tools. Now you should be able to use these supplementary tools.
+ You must have installed ToolDAQ to use the tools in BNL_ToolDAQ. Installation instructions can be found using the above link. You must also copy the folders of the tools you would like to use (ReadBoard, OpenDigitizer, etc) into ToolApplication/UserTools/InactiveTools. Then run the ToolSelect.sh script to activate those tools. Also, replace ToolApplication/DataModel/DataModel.h with the DataModel.h in this repo. Now you should be able to use these supplementary tools.
  
  ### Before running
  Navigate to the configfiles directory and adjust the [digitizer configuration files](docs/digitizer_config_files.md) (`config_b1` for example) and [individual channel setting files](docs/channel_settings_config_files.md) (`b1_chan_set.txt` for example) for the digitizers you want to run. If this is the first time running ToolDAQ in a session, navigate to the ToolApplication directory and source the shell script `source Setup.sh`.
