@@ -61,6 +61,8 @@ class DataModel {
 
   uint64_t AcqDuration = 10;
 
+  std::ofstream outfile;
+
  private:
 
 
