@@ -11,7 +11,7 @@
  Navigate to the configfiles directory and adjust the [digitizer configuration files](docs/digitizer_config_files.md) (`config_b1` for example) and [individual channel setting files](docs/channel_settings_config_files.md) (`b1_chan_set.txt` for example) for the digitizers you want to run. If this is the first time running ToolDAQ in a session, navigate to the ToolApplication directory and source the shell script `source Setup.sh`.
  
  ### To run
- Navigate to the ToolApplication directory then run `./main <your Tool Chain config file>`.
+ Navigate to the ToolApplication directory then run `./main <your Tool Chain config file>`. If you are running in Interactive Mode, type "Start" to begin the data acquisition. When you would like to stop the acquisition, type "Stop", then "Quit".
  
  ### To add a digitizer
  Create a digitizer configuration file in the configfiles directory using `config_b1` as a template and change the settings to your desired configuration (see [here](docs/digitizer_config_files.md)). Create an individual channel settings configuration file in the configfiles directory using `b1_chan_settings.txt` as a template and change the 
