@@ -44,6 +44,10 @@ bool ReadBoard::Initialise(std::string configfile, DataModel &data){
   std::string ofile;
   m_variables.Get("ofile", ofile);
 
+  std::string timestamp = ReadBoard::Get_TimeStamp();
+
+  ofile = ofile + "_" + timestamp + ".bin";
+
   if (!m_data->outfile.is_open()) {
     m_data->outfile.open(ofile, std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
   }
@@ -60,7 +64,6 @@ bool ReadBoard::Execute(){
   uint32_t BufferSize, NumEvents;
   uint64_t CurrentTime, ElapsedTime;
   CAEN_DGTZ_ErrorCode ret;
-  char *buffer = ReadBoard::buffer;
 
   if (!(ReadBoard::acq_started)) {
     ret = CAEN_DGTZ_SWStartAcquisition(handle);
@@ -75,17 +78,17 @@ bool ReadBoard::Execute(){
     ReadBoard::PrevRateTime = ReadBoard::get_time();
   }
 
-  ret = CAEN_DGTZ_ReadData(handle, CAEN_DGTZ_SLAVE_TERMINATED_READOUT_MBLT, buffer, &BufferSize);
+  ret = CAEN_DGTZ_ReadData(handle, CAEN_DGTZ_SLAVE_TERMINATED_READOUT_MBLT, ReadBoard::buffer, &BufferSize);
   if (ret) {
     std::cout<<"ReadData Error"<<std::endl;
     return true;
   }
 
-  if (BufferSize) m_data->outfile.write(buffer, BufferSize);
+  if (BufferSize) m_data->outfile.write(ReadBoard::buffer, BufferSize);
 
   NumEvents = 0;
   if (BufferSize != 0) {
-    ret = CAEN_DGTZ_GetNumEvents(handle, buffer, BufferSize, &NumEvents);
+    ret = CAEN_DGTZ_GetNumEvents(handle, ReadBoard::buffer, BufferSize, &NumEvents);
     if (ret) {
       std::cout<<"Readout Error"<<std::endl;
       return true;
@@ -100,7 +103,6 @@ bool ReadBoard::Execute(){
   int show_data_rate;
   m_variables.Get("show_data_rate", show_data_rate);
   if ((ElapsedTime > 2000) && show_data_rate) {
-//    std::cout<<Ne<<std::endl;
     if (Nb==0) std::cout<<"Board "<<bID<<": No data..."<<std::endl;
     else {
       std::cout<<"Data rate Board "<<bID<<": "<<(float)Nb/((float)ElapsedTime*1048.576f)<<" MB/s   Trigger Rate Board "<<bID<<": "<<((float)Ne*1000.0f)/(float)ElapsedTime<<" Hz"<<std::endl;
@@ -159,6 +161,21 @@ long ReadBoard::get_time(){
   return time_ms;
 }
 
+// Gets timestamp as a string (DDMMYYYYTHHMM)
+std::string ReadBoard::Get_TimeStamp(){
+
+  char timestamp[13];
+
+  time_t rawtime;
+  struct tm* timeinfo;
+
+  time(&rawtime);
+  timeinfo = localtime(&rawtime);
+  strftime(timestamp, 13, "%y%m%dT%H%M", timeinfo);
+
+  return timestamp;
+}
+
 // Opens board and returns board handle
 int ReadBoard::OpenBoard(Store m_variables){
 
@@ -198,8 +215,8 @@ int ReadBoard::OpenBoard(Store m_variables){
 bool ReadBoard::ConfigureBoard(int handle, Store m_variables) {
 
   uint32_t recLen, ChanEnableMask, postTrig, thresh, DCOff, ChanSelfTrigMask;
-  uint32_t length, mask, percent;
-  int bID, verbose;
+  uint32_t length, mask, percent, reg;
+  int bID, verbose, use_ETTT;
   float dynRange;
   std::string polarity, tmp, tmp2, ChanSelfTrigMode, TrigInMode, SWTrigMode;
   CAEN_DGTZ_TriggerPolarity_t pol;
@@ -219,6 +236,7 @@ bool ReadBoard::ConfigureBoard(int handle, Store m_variables) {
   m_variables.Get("DCOff", DCOff);
   m_variables.Get("bID", bID);
   m_variables.Get("verbose", verbose);
+  m_variables.Get("use_ETTT", use_ETTT);
 
   ChanEnableMask = std::stoi(tmp, 0, 16);
   ChanSelfTrigMask = std::stoi(tmp2, 0, 16);
@@ -318,6 +336,22 @@ bool ReadBoard::ConfigureBoard(int handle, Store m_variables) {
   ret = CAEN_DGTZ_SetAcquisitionMode(handle, CAEN_DGTZ_SW_CONTROLLED);
   if (ret) {
     std::cout<<"Error setting acquisition mode"<<std::endl;
+    return false;
+  }
+
+  if (use_ETTT) {
+    ret = CAEN_DGTZ_ReadRegister(handle, 0x811C, &reg);
+    reg = (reg & 0xFF0FFFFF) | 0x00400000;
+    ret = CAEN_DGTZ_WriteRegister(handle, 0x811C, reg);
+    if (ret) {
+      std::cout<<"Error setting ETTT"<<std::endl;
+      return false;
+    }
+  }
+
+  ret = CAEN_DGTZ_SetMaxNumEventsBLT(handle, 10);
+  if (ret) {
+    std::cout<<"Error setting Max Num Events BLT"<<std::endl;
     return false;
   }
 

@@ -8,6 +8,7 @@
 #include "CAENDigitizer.h"
 #include "CAENDigitizerType.h"
 #include <sys/time.h>
+#include <ctime>
 
 /**
  * \class ReadBoard
@@ -29,6 +30,8 @@ class ReadBoard: public Tool {
   bool Finalise(); ///< Finalise funciton used to clean up resorces.
 
   static long get_time();
+
+  std::string Get_TimeStamp();
 
   int OpenBoard(Store m_variables);
   bool ConfigureBoard(int handle, Store m_variables);
