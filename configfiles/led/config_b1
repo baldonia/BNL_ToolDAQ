@@ -15,23 +15,24 @@ bID 1 # Board ID
 
 # Global Configuration settings
 use_global 1 # Use global settings
-DynRange 0.5 # Dynamic range
-RecLen 500 # Acquisition window length in samples
-DCOff 32767 # DC offset
+DynRange 2.0 # Dynamic range
+RecLen 200 # Acquisition window length in samples
+DCOff 5000 # DC offset
 use_ETTT 1 # Use Extended Trigger Time Tag (ETTT)
-ChanEnableMask 0x1 # Active channels
+ChanEnableMask 0xFFFE # Active channels
 
 # Trigger settings
-PostTrig 50 # Post trigger percent
-thresh 10000 # Trigger threshold
-polarity positive # Trigger Polarity
-ChanSelfTrigMask 0x1 # Active channel self-triggers
-ChanSelfTrigMode ACQ_AND_EXTOUT # Channel self trigger propagation
-TrigInMode DISABLED # Trigger In propagation
+PostTrig 70 # Post trigger percent
+thresh 9000 # Trigger threshold
+polarity negative # Trigger Polarity
+ChanSelfTrigMask 0x5 # Active channel self-triggers
+ChanSelfTrigMode DISABLED # Channel self trigger propagation
+TrigInMode ACQ_AND_EXTOUT # Trigger In propagation
 SWTrigMode DISABLED # Software trigger propagation
+IOLevel TTL # I/O level for TRGOUT, TRGIN, and SIN
 
 # Path to individual channel settings file
-chan_set_file configfiles/b1_chan_set.txt
+chan_set_file configfiles/led/b1_chan_set.txt
 
 # Output file name or path 
-ofile output_name 
+ofile led_optHV_5dB_7.85V
