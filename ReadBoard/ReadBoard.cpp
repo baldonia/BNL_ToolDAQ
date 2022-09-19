@@ -218,9 +218,10 @@ bool ReadBoard::ConfigureBoard(int handle, Store m_variables) {
   uint32_t length, mask, percent, reg;
   int bID, verbose, use_ETTT;
   float dynRange;
-  std::string polarity, tmp, tmp2, ChanSelfTrigMode, TrigInMode, SWTrigMode;
+  std::string polarity, tmp, tmp2, ChanSelfTrigMode, TrigInMode, SWTrigMode, IOLevel;
   CAEN_DGTZ_TriggerPolarity_t pol;
   CAEN_DGTZ_TriggerMode_t selftrigmode;
+  CAEN_DGTZ_IOLevel_t iolevel;
   CAEN_DGTZ_ErrorCode ret;
 
   m_variables.Get("RecLen", recLen);
@@ -237,6 +238,7 @@ bool ReadBoard::ConfigureBoard(int handle, Store m_variables) {
   m_variables.Get("bID", bID);
   m_variables.Get("verbose", verbose);
   m_variables.Get("use_ETTT", use_ETTT);
+  m_variables.Get("IOLevel", IOLevel);
 
   ChanEnableMask = std::stoi(tmp, 0, 16);
   ChanSelfTrigMask = std::stoi(tmp2, 0, 16);
@@ -353,6 +355,34 @@ bool ReadBoard::ConfigureBoard(int handle, Store m_variables) {
   if (ret) {
     std::cout<<"Error setting Max Num Events BLT"<<std::endl;
     return false;
+  }
+
+  if (IOLevel=="TTL") {
+    ret = CAEN_DGTZ_SetIOLevel(handle, CAEN_DGTZ_IOLevel_TTL);
+  }
+  else if (IOLevel=="NIM") {
+    ret = CAEN_DGTZ_SetIOLevel(handle, CAEN_DGTZ_IOLevel_NIM);
+  }
+  else {
+    std::cout<<"IO Level must be TTL or NIM"<<std::endl;
+    ret = CAEN_DGTZ_GenericError;
+  }
+  if (ret) {
+    std::cout<<"Error setting IO Level"<<std::endl;
+    return false;
+  }
+  else {
+    ret = CAEN_DGTZ_GetIOLevel(handle, &iolevel);
+    if (iolevel==0) {
+      std::cout<<"IO Level: NIM"<<std::endl;
+    }
+    else if (iolevel==1) {
+      std::cout<<"IO Level: TTL"<<std::endl;
+    }
+    else {
+      std::cout<<"Error reading IO Level"<<std::endl;
+      return false;
+    }
   }
 
   int use_global;
