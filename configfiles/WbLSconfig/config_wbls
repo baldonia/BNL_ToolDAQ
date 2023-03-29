@@ -1,0 +1,6 @@
+# tool config file for runWbLSdaq
+
+verbose 1
+
+jsonfile ~/WbLSdaq/example-v1730-config.json # Path to JSON config file
+WbLSdaq_path ~/WbLSdaq # Path to WbLSdaq executable directory
