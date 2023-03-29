@@ -1,0 +1,5 @@
+# Config file for HVControl tool
+
+verbose 1
+
+JSON_file configfiles/HV/HV_settings.json

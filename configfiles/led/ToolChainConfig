@@ -1,7 +1,7 @@
 #ToolChain dynamic setup file
 
 ##### Runtime Paramiters #####
-verbose 9
+verbose 0
 error_level 0 # 0= do not exit, 1= exit on unhandeled errors only, 2= exit on unhandeled errors and handeled errors
 attempt_recover 1
 remote_port 24004
@@ -24,10 +24,10 @@ service_publish_sec 5
 service_kick_sec 60
 
 ##### Tools To Add #####
-Tools_File configfiles/ToolsConfig
+Tools_File configfiles/led/ToolsConfig
 
 ##### Run Type #####
-Inline 1
-Interactive 0
+Inline 0
+Interactive 1
 Remote 0
 
