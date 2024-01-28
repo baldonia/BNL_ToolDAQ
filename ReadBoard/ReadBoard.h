@@ -40,6 +40,7 @@ class ReadBoard: public Tool {
   uint64_t PrevRateTime;
   int handle, verbose, acq_started=0, Nb, Ne;
   char* buffer;
+  std::string ModelName;
 
  private:
 

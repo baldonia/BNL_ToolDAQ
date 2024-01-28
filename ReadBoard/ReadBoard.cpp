@@ -103,6 +103,8 @@ bool ReadBoard::Execute(){
   int show_data_rate;
   m_variables.Get("show_data_rate", show_data_rate);
   if ((ElapsedTime > 2000) && show_data_rate) {
+    ret = CAEN_DGTZ_SendSWtrigger(handle);
+
     if (Nb==0) std::cout<<"Board "<<bID<<": No data..."<<std::endl;
     else {
       std::cout<<"Data rate Board "<<bID<<": "<<(float)Nb/((float)ElapsedTime*1048.576f)<<" MB/s   Trigger Rate Board "<<bID<<": "<<((float)Ne*1000.0f)/(float)ElapsedTime<<" Hz"<<std::endl;
@@ -207,6 +209,7 @@ int ReadBoard::OpenBoard(Store m_variables){
   else if (!ret && verbose) {
     std::cout<<"Connected to Board "<<bID<<" Model: "<<BoardInfo.ModelName<<std::endl;
   }
+  ReadBoard::ModelName = BoardInfo.ModelName;
 
   return handle;
 }
@@ -214,24 +217,41 @@ int ReadBoard::OpenBoard(Store m_variables){
 // Sets board settings like trigger threshold, record length, DC offset, etc.
 bool ReadBoard::ConfigureBoard(int handle, Store m_variables) {
 
-  uint32_t recLen, ChanEnableMask, postTrig, thresh, DCOff, ChanSelfTrigMask;
+  std::string bdname = ReadBoard::ModelName;
+  std::string tmp, tmp2, ChanSelfTrigMode, GrpSelfTrigMode;
+  uint32_t ChanEnableMask, ChanSelfTrigMask, GrpEnableMask, GrpSelfTrigMask;
+
+  if (bdname.find("730") != std::string::npos) {
+    m_variables.Get("ChanEnableMask", tmp);
+    m_variables.Get("ChanSelfTrigMask", tmp2);
+    m_variables.Get("ChanSelfTrigMode", ChanSelfTrigMode);
+    ChanEnableMask = std::stoi(tmp, 0, 16);
+    ChanSelfTrigMask = std::stoi(tmp2, 0, 16);
+  }
+  else if (bdname.find("740") != std::string::npos) {
+    m_variables.Get("GrpEnableMask", tmp);
+    m_variables.Get("GrpSelfTrigMask", tmp2);
+    m_variables.Get("GrpSelfTrigMode", GrpSelfTrigMode);
+    GrpEnableMask = std::stoi(tmp, 0, 16);
+    GrpSelfTrigMask = std::stoi(tmp2, 0, 16);
+  }
+
+  uint32_t recLen, postTrig, thresh, DCOff;
   uint32_t length, mask, percent, reg;
+  uint16_t dec_factor;
   int bID, verbose, use_ETTT;
   float dynRange;
-  std::string polarity, tmp, tmp2, ChanSelfTrigMode, TrigInMode, SWTrigMode, IOLevel;
+  std::string polarity, TrigInMode, SWTrigMode, IOLevel;
   CAEN_DGTZ_TriggerPolarity_t pol;
   CAEN_DGTZ_TriggerMode_t selftrigmode;
   CAEN_DGTZ_IOLevel_t iolevel;
   CAEN_DGTZ_ErrorCode ret;
 
   m_variables.Get("RecLen", recLen);
-  m_variables.Get("ChanEnableMask", tmp);
   m_variables.Get("PostTrig", postTrig);
   m_variables.Get("DynRange", dynRange);
   m_variables.Get("thresh", thresh);
   m_variables.Get("polarity", polarity);
-  m_variables.Get("ChanSelfTrigMask", tmp2);
-  m_variables.Get("ChanSelfTrigMode", ChanSelfTrigMode);
   m_variables.Get("TrigInMode", TrigInMode);
   m_variables.Get("SWTrigMode", SWTrigMode);
   m_variables.Get("DCOff", DCOff);
@@ -239,9 +259,6 @@ bool ReadBoard::ConfigureBoard(int handle, Store m_variables) {
   m_variables.Get("verbose", verbose);
   m_variables.Get("use_ETTT", use_ETTT);
   m_variables.Get("IOLevel", IOLevel);
-
-  ChanEnableMask = std::stoi(tmp, 0, 16);
-  ChanSelfTrigMask = std::stoi(tmp2, 0, 16);
 
   ret = CAEN_DGTZ_Reset(handle);
   if (!ret && verbose) std::cout<<"Board reset"<<std::endl;
@@ -256,6 +273,18 @@ bool ReadBoard::ConfigureBoard(int handle, Store m_variables) {
     std::cout<<"Error setting board ID"<<std::endl;
     return false;
   }
+  if (bdname.find("740")!=std::string::npos) {
+    // Enforce record length is multiple of 24 samples for ease of data decoding for V1740
+    int rem = recLen%24;
+    if (rem < 12) {recLen -= rem;}
+    else {recLen += (24-rem);}
+  }
+  else {
+    // Enforce record length is multiple of 20 samples to avoid filler words in data
+    int rem = recLen%20;
+    if (rem < 10) {recLen -= rem;}
+    else {recLen += (20-rem);}
+  }
 
   ret = CAEN_DGTZ_SetRecordLength (handle,recLen);
   ret = CAEN_DGTZ_GetRecordLength(handle,&length);
@@ -264,13 +293,42 @@ bool ReadBoard::ConfigureBoard(int handle, Store m_variables) {
     std::cout<<"Error setting record length"<<std::endl;
     return false;
   }
+//  usleep(1000000);
+  if (bdname.find("740")!=std::string::npos) {
+    ret = CAEN_DGTZ_SetDecimationFactor(handle, 1);
+    if (ret) {
+      std::cout<<"Error setting decimation factor: "<<ret<<std::endl;
+      return false;
+    }
+   // usleep(1000000);
+    ret = CAEN_DGTZ_GetDecimationFactor(handle, &dec_factor);
+    if (!ret) {std::cout<<"Decimation Factor: "<<dec_factor<<std::endl;}
+    else {
+      std::cout<<"Error getting decimation factor: "<<ret<<std::endl;
+      return false;
+    }
+  }
+ // usleep(1000000);
 
-  ret = CAEN_DGTZ_SetPostTriggerSize(handle, postTrig);
-  ret = CAEN_DGTZ_GetPostTriggerSize(handle, &percent);
-  if (!ret && verbose) std::cout<<"Post Trigger set to: "<<percent<<"%"<<std::endl;
-  else if (ret) {
-    std::cout<<"Error setting post trigger size"<<std::endl;
-    return false;
+  if (bdname.find("730")!=std::string::npos) {
+    ret = CAEN_DGTZ_SetPostTriggerSize(handle, postTrig);
+    ret = CAEN_DGTZ_GetPostTriggerSize(handle, &percent);
+    if (!ret && verbose) std::cout<<"Post Trigger set to: "<<percent<<"%"<<std::endl;
+    else if (ret) {
+      std::cout<<"Error setting post trigger size"<<std::endl;
+      return false;
+    }
+  }
+  else if (bdname.find("740")!=std::string::npos) {
+    uint32_t posttrig = int(length*postTrig/100);
+    ret = CAEN_DGTZ_WriteRegister(handle, 0x8114, posttrig);
+    ret = CAEN_DGTZ_ReadRegister(handle, 0x8114, &percent);
+
+    if (!ret && verbose) std::cout<<"Post Trigger set to: "<<float(percent)/float(length)*100<<"%"<<std::endl;
+    else if (ret) {
+      std::cout<<"Error setting post trigger size"<<std::endl;
+      return false;
+    }
   }
 
   if (polarity!="positive" && polarity!="negative") {
@@ -292,12 +350,23 @@ bool ReadBoard::ConfigureBoard(int handle, Store m_variables) {
     return false;
   }
 
-  ret = CAEN_DGTZ_SetChannelEnableMask(handle, ChanEnableMask);
-  ret = CAEN_DGTZ_GetChannelEnableMask(handle, &mask);
-  if (!ret && verbose) std::cout<<"Channels Enabled: "<<std::hex<<mask<<std::dec<<std::endl;
-  else if (ret) {
-    std::cout<<"Error enabling channels"<<std::endl;
-    return false;
+  if (bdname.find("730") != std::string::npos) {
+    ret = CAEN_DGTZ_SetChannelEnableMask(handle, ChanEnableMask);
+    ret = CAEN_DGTZ_GetChannelEnableMask(handle, &mask);
+    if (!ret && verbose) std::cout<<"Channels Enabled: "<<std::hex<<mask<<std::dec<<std::endl;
+    else if (ret) {
+      std::cout<<"Error enabling channels"<<std::endl;
+      return false;
+    }
+  }
+  else if (bdname.find("740") != std::string::npos) {
+    ret = CAEN_DGTZ_SetGroupEnableMask(handle, GrpEnableMask);
+    ret = CAEN_DGTZ_GetGroupEnableMask(handle, &mask);
+    if (!ret && verbose) std::cout<<"Groups Enabled: "<<std::hex<<mask<<std::dec<<std::endl;
+    else if (ret) {
+      std::cout<<"Error enabling groups"<<std::endl;
+      return false;
+    }
   }
 
   if (TrigInMode=="DISABLED") {
@@ -391,21 +460,23 @@ bool ReadBoard::ConfigureBoard(int handle, Store m_variables) {
 // Use the global settings
   if (use_global) {
 
-    if(dynRange==2.0) {
-      ret = CAEN_DGTZ_WriteRegister(handle, 0x8028, 0);
-      if (!ret && verbose) std::cout<<"Dynamic Range set to 2 Vpp"<<std::endl;
-    }
-    else if (dynRange==0.5) {
-      ret = CAEN_DGTZ_WriteRegister(handle, 0x8028, 1);
-      if (!ret && verbose) std::cout<<"Dynamic Range set to 0.5 Vpp"<<std::endl;
-    }
-    else {
-      std::cout<<"Invalid Dynamic Range Input"<<std::endl;
-      ret = CAEN_DGTZ_GenericError;
-    }
-    if (ret) {
-      std::cout<<"Error setting dynamic range"<<std::endl;
-      return false;
+    if (bdname.find("730") != std::string::npos) {
+      if(dynRange==2.0) {
+        ret = CAEN_DGTZ_WriteRegister(handle, 0x8028, 0);
+        if (!ret && verbose) std::cout<<"Dynamic Range set to 2 Vpp"<<std::endl;
+      }
+      else if (dynRange==0.5) {
+        ret = CAEN_DGTZ_WriteRegister(handle, 0x8028, 1);
+        if (!ret && verbose) std::cout<<"Dynamic Range set to 0.5 Vpp"<<std::endl;
+      }
+      else {
+        std::cout<<"Invalid Dynamic Range Input"<<std::endl;
+        ret = CAEN_DGTZ_GenericError;
+      }
+      if (ret) {
+        std::cout<<"Error setting dynamic range"<<std::endl;
+        return false;
+      }
     }
 
     ret = CAEN_DGTZ_WriteRegister(handle, 0x8080, thresh);
@@ -422,132 +493,222 @@ bool ReadBoard::ConfigureBoard(int handle, Store m_variables) {
       return false;
     }
 
-    if (ChanSelfTrigMode=="DISABLED") {
-      ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_DISABLED, ChanSelfTrigMask);
+    if (bdname.find("730") != std::string::npos) {
+      if (ChanSelfTrigMode=="DISABLED") {
+        ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_DISABLED, ChanSelfTrigMask);
+      }
+      else if (ChanSelfTrigMode=="EXTOUT_ONLY") {
+        ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_EXTOUT_ONLY, ChanSelfTrigMask);
+      }
+      else if (ChanSelfTrigMode=="ACQ_ONLY") {
+        ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_ACQ_ONLY, ChanSelfTrigMask);
+      }
+      else if (ChanSelfTrigMode=="ACQ_AND_EXTOUT") {
+        ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_ACQ_AND_EXTOUT, ChanSelfTrigMask);
+      }
+      else {
+        std::cout<<"ChanSelfTrigMode must be DISABLED/EXT_ONLY/ACQ_ONLY/ACQ_AND_EXTOUT"<<std::endl;
+        ret = CAEN_DGTZ_GenericError;
+      }
+      if (ret) {
+        std::cout<<"Error setting channel self trigger"<<std::endl;
+        return false;
+      }
     }
-    else if (ChanSelfTrigMode=="EXTOUT_ONLY") {
-      ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_EXTOUT_ONLY, ChanSelfTrigMask);
+    else if (bdname.find("740") != std::string::npos) {
+      if (GrpSelfTrigMode=="DISABLED") {
+        ret = CAEN_DGTZ_SetGroupSelfTrigger(handle, CAEN_DGTZ_TRGMODE_DISABLED, GrpSelfTrigMask);
+      }
+      else if (GrpSelfTrigMode=="EXTOUT_ONLY") {
+        ret = CAEN_DGTZ_SetGroupSelfTrigger(handle, CAEN_DGTZ_TRGMODE_EXTOUT_ONLY, GrpSelfTrigMask);
+      }
+      else if (GrpSelfTrigMode=="ACQ_ONLY") {
+        ret = CAEN_DGTZ_SetGroupSelfTrigger(handle, CAEN_DGTZ_TRGMODE_ACQ_ONLY, GrpSelfTrigMask);
+      }
+      else if (GrpSelfTrigMode=="ACQ_AND_EXTOUT") {
+        ret = CAEN_DGTZ_SetGroupSelfTrigger(handle, CAEN_DGTZ_TRGMODE_ACQ_AND_EXTOUT, GrpSelfTrigMask);
+      }
+      else {
+        std::cout<<"GrpSelfTrigMode must be DISABLED/EXT_ONLY/ACQ_ONLY/ACQ_AND_EXTOUT"<<std::endl;
+        ret = CAEN_DGTZ_GenericError;
+      }
+      if (ret) {
+        std::cout<<"Error setting group self trigger"<<std::endl;
+        return false;
+      }
     }
-    else if (ChanSelfTrigMode=="ACQ_ONLY") {
-      ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_ACQ_ONLY, ChanSelfTrigMask);
-    }
-    else if (ChanSelfTrigMode=="ACQ_AND_EXTOUT") {
-      ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_ACQ_AND_EXTOUT, ChanSelfTrigMask);
-    }
-    else {
-      std::cout<<"ChanSelfTrigMode must be DISABLED/EXT_ONLY/ACQ_ONLY/ACQ_AND_EXTOUT"<<std::endl;
-      ret = CAEN_DGTZ_GenericError;
-    }
-    if (ret) {
-      std::cout<<"Error setting channel self trigger"<<std::endl;
-      return false;
-    }
-
   }
 
 // Use the individual channel settings
   else {
-
-    std::string path;
-    m_variables.Get("chan_set_file", path);
-
     std::ifstream ifile;
-    ifile.open(path);
 
-    if (!(ifile.is_open())) {
-      std::cout<<"Error opening channel settings file"<<std::endl;
-      return false;
+    if (bdname.find("730") != std::string::npos) {
+      std::string path;
+      m_variables.Get("chan_set_file", path);
+
+      ifile.open(path);
+
+      if (!(ifile.is_open())) {
+        std::cout<<"Error opening channel settings file"<<std::endl;
+        return false;
+      }
+    }
+    else if (bdname.find("740") != std::string::npos) {
+      std::string path;
+      m_variables.Get("group_set_file", path);
+
+      ifile.open(path);
+
+      if (!(ifile.is_open())) {
+        std::cout<<"Error opening group settings file"<<std::endl;
+        return false;
+      }
     }
 
-    int value, chan, reg;
+    int value, chan, grp, reg;
+    uint32_t mask;
     std::string line;
     std::getline(ifile, line);
 
     while(std::getline(ifile, line, ',')) {
 
-      chan = std::stoi(line);
-
-      std::getline(ifile, line, ',');
-      value = std::stoi(line);
-      ret = CAEN_DGTZ_SetChannelDCOffset(handle, chan, value);
-      if (ret) {
-        std::cout<<"Error setting channel "<<chan<<" DC offset"<<std::endl;
-        return false;
-      }
-
-      std::getline(ifile, line, ',');
-      value = std::stoi(line);
-      ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle, chan, value);
-      if (ret) {
-        std::cout<<"Error setting channel "<<chan<<" trigger threshold"<<std::endl;
-        return false;
-      }
-
-      if (chan%2) std::getline(ifile, line);
-      else std::getline(ifile, line, ',');
-      reg = 0x1028 + (0x100 * chan);
-      if (line=="2.0") {
-        ret = CAEN_DGTZ_WriteRegister(handle, reg, 0);
-      }
-      else if (line=="0.5") {
-        ret = CAEN_DGTZ_WriteRegister(handle, reg, 1);
-      }
-      else {
-        ret = CAEN_DGTZ_GenericError;
-        std::cout<<"Invalid dynamic range, must be 2.0 or 0.5"<<std::endl;
-      }
-      if (ret) {
-        std::cout<<"Error setting channel "<<chan<<" dynamic range"<<std::endl;
-        return false;
-      }
-
-      if (!(chan%2)) {
-
-        int ch_to_set = int(pow(2, chan));
+      if (bdname.find("730") != std::string::npos) {
+        chan = std::stoi(line);
 
         std::getline(ifile, line, ',');
-        if (line=="EXTOUT_ONLY") {
-          ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_EXTOUT_ONLY, ch_to_set);
-        }
-        else if (line=="ACQ_ONLY") {
-          ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_ACQ_ONLY, ch_to_set);
-        }
-        else if (line=="ACQ_AND_EXTOUT") {
-          ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_ACQ_AND_EXTOUT, ch_to_set);
-        }
-        else if (line=="DISABLED") {
-          ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_DISABLED, ch_to_set);
-        }
-        else {
-          std::cout<<"Channel self trigger mode must be DISABLED/ACQ_ONLY/EXTOUT_ONLY/ACQ_AND_EXTOUT"<<std::endl;
-          ret = CAEN_DGTZ_GenericError;
-        }
+        value = std::stoi(line);
+        ret = CAEN_DGTZ_SetChannelDCOffset(handle, chan, value);
         if (ret) {
-          std::cout<<"Error setting channel "<<chan<<" self trigger mode"<<std::endl;
+          std::cout<<"Error setting channel "<<chan<<" DC offset"<<std::endl;
           return false;
         }
 
-        reg = 0x1084 + (chan * 0x100);
-
-        std::getline(ifile, line);
-        if (line=="OR") {
-          ret = CAEN_DGTZ_WriteRegister(handle, reg, 3);
+        std::getline(ifile, line, ',');
+        value = std::stoi(line);
+        ret = CAEN_DGTZ_SetChannelTriggerThreshold(handle, chan, value);
+        if (ret) {
+          std::cout<<"Error setting channel "<<chan<<" trigger threshold"<<std::endl;
+          return false;
         }
-        else if (line=="AND") {
+
+        if (chan%2) std::getline(ifile, line);
+        else std::getline(ifile, line, ',');
+        reg = 0x1028 + (0x100 * chan);
+        if (line=="2.0") {
           ret = CAEN_DGTZ_WriteRegister(handle, reg, 0);
         }
-        else if (line=="Xn") {
+        else if (line=="0.5") {
           ret = CAEN_DGTZ_WriteRegister(handle, reg, 1);
         }
-        else if (line=="Xn+1") {
-          ret = CAEN_DGTZ_WriteRegister(handle, reg, 2);
+        else {
+          ret = CAEN_DGTZ_GenericError;
+          std::cout<<"Invalid dynamic range, must be 2.0 or 0.5"<<std::endl;
+        }
+        if (ret) {
+          std::cout<<"Error setting channel "<<chan<<" dynamic range"<<std::endl;
+          return false;
+        }
+
+        if (!(chan%2)) {
+
+          int ch_to_set = int(pow(2, chan));
+
+          std::getline(ifile, line, ',');
+          if (line=="EXTOUT_ONLY") {
+            ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_EXTOUT_ONLY, ch_to_set);
+          }
+          else if (line=="ACQ_ONLY") {
+            ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_ACQ_ONLY, ch_to_set);
+          }
+          else if (line=="ACQ_AND_EXTOUT") {
+            ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_ACQ_AND_EXTOUT, ch_to_set);
+          }
+          else if (line=="DISABLED") {
+            ret = CAEN_DGTZ_SetChannelSelfTrigger(handle, CAEN_DGTZ_TRGMODE_DISABLED, ch_to_set);
+          }
+          else {
+            std::cout<<"Channel self trigger mode must be DISABLED/ACQ_ONLY/EXTOUT_ONLY/ACQ_AND_EXTOUT"<<std::endl;
+            ret = CAEN_DGTZ_GenericError;
+          }
+          if (ret) {
+            std::cout<<"Error setting channel "<<chan<<" self trigger mode"<<std::endl;
+            return false;
+          }
+
+          reg = 0x1084 + (chan * 0x100);
+
+          std::getline(ifile, line);
+          if (line=="OR") {
+            ret = CAEN_DGTZ_WriteRegister(handle, reg, 3);
+          }
+          else if (line=="AND") {
+            ret = CAEN_DGTZ_WriteRegister(handle, reg, 0);
+          }
+          else if (line=="Xn") {
+            ret = CAEN_DGTZ_WriteRegister(handle, reg, 1);
+          }
+          else if (line=="Xn+1") {
+            ret = CAEN_DGTZ_WriteRegister(handle, reg, 2);
+          }
+          else {
+            std::cout<<"Channel self trigger logic must be OR/AND/Xn/Xn+1"<<std::endl;
+            ret = CAEN_DGTZ_GenericError;
+          }
+          if (ret) {
+            std::cout<<"Error setting channel "<<chan<<" self trigger logic"<<std::endl;
+            return false;
+          }
+        }
+      }
+      else if (bdname.find("740") != std::string::npos) {
+        grp = std::stoi(line);
+
+        std::getline(ifile, line, ',');
+        value = std::stoi(line);
+        ret = CAEN_DGTZ_SetGroupDCOffset(handle, grp, value);
+        if (ret) {
+          std::cout<<"Error setting group "<<grp<<" DC offset"<<std::endl;
+          return false;
+        }
+
+        std::getline(ifile, line, ',');
+        value = std::stoi(line);
+        ret = CAEN_DGTZ_SetGroupTriggerThreshold(handle, grp, value);
+        if (ret) {
+          std::cout<<"Error setting grp "<<grp<<" trigger threshold"<<std::endl;
+          return false;
+        }
+
+        int grp_to_set = int(pow(2, grp));
+
+        std::getline(ifile, line, ',');
+        if (line=="EXTOUT_ONLY") {
+          ret = CAEN_DGTZ_SetGroupSelfTrigger(handle, CAEN_DGTZ_TRGMODE_EXTOUT_ONLY, grp_to_set);
+        }
+        else if (line=="ACQ_ONLY") {
+          ret = CAEN_DGTZ_SetGroupSelfTrigger(handle, CAEN_DGTZ_TRGMODE_ACQ_ONLY, grp_to_set);
+        }
+        else if (line=="ACQ_AND_EXTOUT") {
+          ret = CAEN_DGTZ_SetGroupSelfTrigger(handle, CAEN_DGTZ_TRGMODE_ACQ_AND_EXTOUT, grp_to_set);
+        }
+        else if (line=="DISABLED") {
+          ret = CAEN_DGTZ_SetGroupSelfTrigger(handle, CAEN_DGTZ_TRGMODE_DISABLED, grp_to_set);
         }
         else {
-          std::cout<<"Channel self trigger logic must be OR/AND/Xn/Xn+1"<<std::endl;
+          std::cout<<"Group self trigger mode must be DISABLED/ACQ_ONLY/EXTOUT_ONLY/ACQ_AND_EXTOUT"<<std::endl;
           ret = CAEN_DGTZ_GenericError;
         }
         if (ret) {
-          std::cout<<"Error setting channel "<<chan<<" self trigger logic"<<std::endl;
+          std::cout<<"Error setting group "<<grp<<" self trigger mode"<<std::endl;
+          return false;
+        }
+
+        std::getline(ifile, line, ',');
+        mask = std::stoi(line, 0, 16);
+        ret = CAEN_DGTZ_SetChannelGroupMask(handle, grp, mask);
+        if (ret) {
+          std::cout<<"Error setting group "<<grp<<" channel mask"<<std::endl;
           return false;
         }
       }
