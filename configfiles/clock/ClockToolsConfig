@@ -1,0 +1,5 @@
+#ReadClock1 ReadClock configfiles/clock/config_b1
+#ReadClock2 ReadClock configfiles/clock/config_b2
+#ReadClock3 ReadClock configfiles/clock/config_b3
+ReadClock4 ReadClock configfiles/clock/config_b4
+ReadClock5 ReadClock configfiles/clock/config_b5

@@ -37,10 +37,13 @@ class ReadBoard: public Tool {
   bool ConfigureBoard(int handle, Store m_variables);
 
   uint32_t bID;
-  uint64_t PrevRateTime;
-  int handle, verbose, acq_started=0, Nb, Ne;
+  uint64_t PrevRateTime, PrevTempTime;
+  int handle, verbose, acq_started=0, Nb, Ne, store_temps, event_count;
+  int file_num=0, ev_per_file=0;
   char* buffer;
-  std::string ModelName;
+  std::string ModelName, ofile_part;
+
+  std::ofstream tfile;
 
  private:
 

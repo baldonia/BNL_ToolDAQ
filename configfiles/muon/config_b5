@@ -1,0 +1,44 @@
+# Config file for Board 1
+
+# Print out confirmation messages
+verbose 1
+
+# Print out data acquisition rate
+show_data_rate 1 
+
+# Temperature check
+store_temps 0 # Select to store temperature data (only for V1730)
+temp_time 60 # Seconds between ADC temperature checks
+
+# Connection settings
+VME_bridge 1 # Use VME bridge
+address 0x32150000 # VME base address
+LinkNum 0 # Optical link number
+ConetNode 0 # Conet node number in daisy chain
+bID 5 # Board ID
+
+# Global Configuration settings
+use_global 1 # Use global settings
+RecLen 240 # Acquisition window length in samples (must be multiple of 24)
+DCOff 10000 # DC offset
+use_ETTT 1 # Use Extended Trigger Time Tag (ETTT)
+GrpEnableMask 0xFF # Active groups
+
+# Trigger settings
+PostTrig 87.5 # Post trigger percent
+thresh 2250 # Trigger threshold (12 bit)
+polarity negative # Trigger Polarity
+GrpSelfTrigMask 0x0 # Active channel self-triggers
+GrpSelfTrigMode DISABLED # Channel self trigger propagation
+TrigInMode ACQ_AND_EXTOUT # Trigger In propagation
+SWTrigMode DISABLED # Software trigger propagation
+IOLevel NIM # I/O level for TRGOUT, TRGIN, and SIN
+
+# Path to individual channel settings file
+grp_set_file configfiles/muon/b5_grp_set.txt
+
+# Number of events per file
+ev_per_file 10000 # Number of events per file (use 0 for 1 big file)
+
+# Output file name or path 
+ofile background_test

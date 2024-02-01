@@ -1,3 +1,5 @@
 ReadBoard1 ReadBoard configfiles/led/config_b1
 ReadBoard2 ReadBoard configfiles/led/config_b2
 ReadBoard3 ReadBoard configfiles/led/config_b3
+ReadBoard4 ReadBoard configfiles/led/config_b4
+ReadBoard5 ReadBoard configfiles/led/config_b5

@@ -6,6 +6,10 @@ verbose 1
 # Print out data acquisition rate
 show_data_rate 1 
 
+# Temperature check
+store_temps 0 # Select to store temperature data
+temp_time 60 # Seconds between ADC temperature checks
+
 # Connection settings
 VME_bridge 1 # Use VME bridge
 address 0x32100000 # VME base address
@@ -16,13 +20,14 @@ bID 1 # Board ID
 # Global Configuration settings
 use_global 1 # Use global settings
 DynRange 2.0 # Dynamic range
-RecLen 200 # Acquisition window length in samples
+RecLen 160 # Acquisition window length in samples
 DCOff 5000 # DC offset
 use_ETTT 1 # Use Extended Trigger Time Tag (ETTT)
 ChanEnableMask 0xFFFE # Active channels
+#ChanEnableMask 0x1 # Active channels
 
 # Trigger settings
-PostTrig 70 # Post trigger percent
+PostTrig 90 # Post trigger percent
 thresh 9000 # Trigger threshold
 polarity negative # Trigger Polarity
 ChanSelfTrigMask 0x5 # Active channel self-triggers
@@ -34,5 +39,9 @@ IOLevel TTL # I/O level for TRGOUT, TRGIN, and SIN
 # Path to individual channel settings file
 chan_set_file configfiles/led/b1_chan_set.txt
 
+# Number of events per file
+ev_per_file 0 # Number of events per file (use 0 for 1 big file)
+
 # Output file name or path 
-ofile led_optHV_5dB_7.85V
+ofile led_manualHV_5dB_7.65V
+#ofile /home/rootless/Nextcloud/WBLS-data/bugtest

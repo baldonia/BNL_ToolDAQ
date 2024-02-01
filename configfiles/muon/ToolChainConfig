@@ -18,7 +18,7 @@ log_split_files 0 # seperate output and error log files (named x.o and x.e)
 
 ###### Service discovery #####
 service_discovery_address 239.192.1.1
-service_discovery_port 5000
+service_discovery_port 8765
 service_name main_service2
 service_publish_sec 5
 service_kick_sec 60

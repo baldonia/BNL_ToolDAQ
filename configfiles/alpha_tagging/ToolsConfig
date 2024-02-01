@@ -1,0 +1,5 @@
+ReadBoard1 ReadBoard configfiles/alpha_tagging/config_b1
+ReadBoard2 ReadBoard configfiles/alpha_tagging/config_b2
+ReadBoard3 ReadBoard configfiles/alpha_tagging/config_b3
+ReadBoard4 ReadBoard configfiles/alpha_tagging/config_b4
+ReadBoard5 ReadBoard configfiles/alpha_tagging/config_b5

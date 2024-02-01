@@ -6,6 +6,10 @@ verbose 1
 # Print out data acquisition rate
 show_data_rate 1 
 
+# Temperature check
+store_temps 1 # Select to store temperature data
+temp_time 60 # Seconds between ADC temperature checks
+
 # Connection settings
 VME_bridge 1 # Use VME bridge
 address 0x32120000 # VME base address
@@ -34,5 +38,9 @@ IOLevel NIM # Level for TRGIN, TRGOUT, SIN
 # Path to individual channel settings file
 chan_set_file configfiles/muon/b2_chan_set.txt
 
+# Number of events per file
+ev_per_file 10000 # Number of events per file (use 0 for 1 big file)
+
 # Output file name or path 
-ofile phase0_muon_water
+#ofile phase0_muon_water
+ofile test_readout_error

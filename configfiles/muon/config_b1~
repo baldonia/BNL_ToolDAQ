@@ -18,6 +18,7 @@ use_global 1 # Use global settings
 DynRange 2.0 # Dynamic range
 RecLen 2000 # Acquisition window length in samples
 DCOff 5000 # DC offset
+use_ETTT 1 # Use Extended Trigger Time Tag (ETTT)
 ChanEnableMask 0xFFFF # Active channels
 
 # Trigger settings
@@ -34,4 +35,5 @@ IOLevel NIM # I/O level for TRGOUT, TRGIN, and SIN
 chan_set_file configfiles/muon/b1_chan_set.txt
 
 # Output file name or path 
-ofile phase0_muon_water_220918T0854.bin
+ofile test_muon_wbls_1pct
+#ofile debug

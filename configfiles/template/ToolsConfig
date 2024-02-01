@@ -1,3 +1,2 @@
-ReadBoard1 ReadBoard configfiles/config_b1
-#ReadBoard2 ReadBoard configfiles/config_b2
-#ReadBoard3 ReadBoard configfiles/config_b3
+test1 DummyTool configfiles/DummyToolConfig
+test2 DummyTool configfiles/DummyToolConfig

@@ -16,17 +16,19 @@ bID 3 # Board ID
 # Global Configuration settings
 use_global 1 # Use global settings
 DynRange 2.0 # Dynamic range
-RecLen 200 # Acquisition window length in samples
+RecLen 160 # Acquisition window length in samples
 DCOff 5000 # DC offset
+use_ETTT 0 # Use Extended Trigger Time Tag (ETTT)
 ChanEnableMask 0xFFFF # Active channels
+#ChanEnableMask 0x1 # Active channels
 
 # Trigger settings
-PostTrig 70 # Post trigger percent
+PostTrig 90 # Post trigger percent
 thresh 15200 # Trigger threshold
 polarity negative # Trigger Polarity
 ChanSelfTrigMask 0x1 # Active channel self-triggers
 ChanSelfTrigMode DISABLED # Channel self trigger propagation
-TrigInMode ACQ_ONLY # Trigger In propagation
+TrigInMode ACQ_AND_EXTOUT # Trigger In propagation
 SWTrigMode DISABLED # Software trigger propagation
 IOLevel TTL # Level for TRGIN, TRGOUT, SIN
 
@@ -34,4 +36,4 @@ IOLevel TTL # Level for TRGIN, TRGOUT, SIN
 chan_set_file configfiles/b3_chan_set.txt
 
 # Output file name or path 
-ofile led_optHV_5dB_7.60V_220913T0000.bin
+ofile led_optHV_5dB_7.85V

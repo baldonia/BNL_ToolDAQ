@@ -41,15 +41,35 @@ bool ReadBoard::Initialise(std::string configfile, DataModel &data){
 
   ReadBoard::buffer = buffer;
 
+  int ev_per_file;
+  m_variables.Get("ev_per_file", ev_per_file);
+  ReadBoard::ev_per_file = ev_per_file;
+
   std::string ofile;
   m_variables.Get("ofile", ofile);
 
   std::string timestamp = ReadBoard::Get_TimeStamp();
-
-  ofile = ofile + "_" + timestamp + ".bin";
+  std::string ofile_part;
+  ofile_part = ofile + "_" + timestamp;
+  ReadBoard::ofile_part = ofile_part;
+  std::string ofile_full = ofile_part + "_0.bin";
 
   if (!m_data->outfile.is_open()) {
-    m_data->outfile.open(ofile, std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+    m_data->outfile.open(ofile_full, std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+  }
+
+// Temperature file
+  int store_temps;
+  m_variables.Get("store_temps", store_temps);
+  ReadBoard::store_temps = store_temps;
+  if (store_temps){
+    std::string bdname = ReadBoard::ModelName;
+    if (bdname.find("730") != std::string::npos){
+      std::string tempfile = ofile_part + "_temps_b" + std::to_string(bID) + ".txt";
+      ReadBoard::tfile.open(tempfile, std::ofstream::out);
+
+      ReadBoard::tfile<<"#Each column corresponds to a channel"<<std::endl;
+    }
   }
 
   usleep(1000000);
@@ -76,6 +96,7 @@ bool ReadBoard::Execute(){
     Nb = 0;
     Ne = 0;
     ReadBoard::PrevRateTime = ReadBoard::get_time();
+    ReadBoard::PrevTempTime = ReadBoard::get_time();
   }
 
   ret = CAEN_DGTZ_ReadData(handle, CAEN_DGTZ_SLAVE_TERMINATED_READOUT_MBLT, ReadBoard::buffer, &BufferSize);
@@ -84,7 +105,7 @@ bool ReadBoard::Execute(){
     return true;
   }
 
-  if (BufferSize) m_data->outfile.write(ReadBoard::buffer, BufferSize);
+//  if (BufferSize) m_data->outfile.write(ReadBoard::buffer, BufferSize);
 
   NumEvents = 0;
   if (BufferSize != 0) {
@@ -95,6 +116,23 @@ bool ReadBoard::Execute(){
     }
   }
 
+  if (ReadBoard::bID==1 && ReadBoard::ev_per_file){
+    ReadBoard::event_count += NumEvents;
+    if (ReadBoard::event_count > ReadBoard::ev_per_file){
+      if (m_data->outfile.is_open()) {
+        m_data->outfile.close();
+      }
+      ReadBoard::file_num += 1;
+      std::string new_ofile = ReadBoard::ofile_part + "_" + std::to_string(ReadBoard::file_num) + ".bin";
+      if (!m_data->outfile.is_open()) {
+        m_data->outfile.open(new_ofile, std::ofstream::out | std::ofstream::trunc | std::ofstream::binary);
+      }
+     ReadBoard::event_count = 0;
+    }
+  }
+
+  if (BufferSize) m_data->outfile.write(ReadBoard::buffer, BufferSize);
+
   Nb += BufferSize;
   Ne += NumEvents;
   CurrentTime = ReadBoard::get_time();
@@ -103,7 +141,7 @@ bool ReadBoard::Execute(){
   int show_data_rate;
   m_variables.Get("show_data_rate", show_data_rate);
   if ((ElapsedTime > 2000) && show_data_rate) {
-    ret = CAEN_DGTZ_SendSWtrigger(handle);
+//    ret = CAEN_DGTZ_SendSWtrigger(handle);
 
     if (Nb==0) std::cout<<"Board "<<bID<<": No data..."<<std::endl;
     else {
@@ -113,6 +151,28 @@ bool ReadBoard::Execute(){
     Nb = 0;
     Ne = 0;
     ReadBoard::PrevRateTime = CurrentTime;
+  }
+
+  if (ReadBoard::store_temps){
+    std::string bdname = ReadBoard::ModelName;
+    if (bdname.find("730") != std::string::npos){
+      ElapsedTime = CurrentTime - ReadBoard::PrevTempTime;
+      int temp_time;
+      m_variables.Get("temp_time", temp_time);
+      if (ElapsedTime > temp_time*1000){
+        uint32_t temp;
+        for (int i; i<16; i++){
+          ret = CAEN_DGTZ_ReadTemperature(handle, i, &temp);
+          if (ret) {
+            std::cout<<"Error reading temp: "<<ret<<std::endl;
+            return false;
+          }
+          ReadBoard::tfile<<temp<<" ";
+        }
+        ReadBoard::tfile<<std::endl;
+        ReadBoard::PrevTempTime = CurrentTime;
+      }
+    }
   }
 
   ReadBoard::Ne = Ne;
@@ -138,6 +198,15 @@ bool ReadBoard::Finalise(){
 
   if (m_data->outfile.is_open()) {
     m_data->outfile.close();
+  }
+
+  if (ReadBoard::store_temps){
+    std::string bdname = ReadBoard::ModelName;
+    if (bdname.find("730") != std::string::npos){
+      if (ReadBoard::tfile.is_open()) {
+        ReadBoard::tfile.close();
+      }
+    }
   }
 
   ret = CAEN_DGTZ_CloseDigitizer(handle);
