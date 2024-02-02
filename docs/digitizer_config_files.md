@@ -4,7 +4,9 @@ The parameters in this file are for global board settings. Individual channel se
 | Parameter Name   | Type      | Description                                                                                      | 
 |:-----------------|-----------|--------------------------------------------------------------------------------------------------|
 | verbose          | int       | Print confirmation messages (0 or 1)                                                             |
-| show_data_rate   | int       | Print data rate every 2 seconds (0 or 1)                                                         |
+| show_data_rate   | int       | Print data rate every 2 seconds (0 or 1)                                                         |                                                                                                                       
+| store_temps      | int       | Store V1730 ADC temperatures in a text file (0 or 1)|
+| temp_time        | int       | Time between temperature readings (seconds)|
 | VME_bridge       | int       | Digitizer is connected via VME bridge (0 or 1)                                                   |
 | address          | uint32_t  | Digitizer VME base address (hex) (only used if VME_bridge=1)                                     |
 | LinkNum          | int       | Optical link port on A3818                                                                       |
@@ -23,4 +25,5 @@ The parameters in this file are for global board settings. Individual channel se
 | TrigInMode       | string    | External trigger input propagation. Must be "DISABLED"/"ACQ_ONLY"/"EXTOUT_ONLY"/"ACQ_AND_EXTOUT" |
 | SWTrigMode       | string    | SW trigger propagation. Must be "DISABLED"/"ACQ_ONLY"/"EXTOUT_ONLY"/"ACQ_AND_EXTOUT" (currently not implemented, keep at DISABLED)|
 | chan_set_file    | string    | Path to individual channel settings file                                                         |
+| ev_per_file      | int       | Number of events per binary file (use 0 for one large file)|
 | ofile            | string    | Output file name or path (must be the same for all digitizer config files, working on updating) |
